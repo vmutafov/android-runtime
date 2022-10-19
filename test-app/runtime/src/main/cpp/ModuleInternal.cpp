@@ -377,12 +377,12 @@ Local<Script> ModuleInternal::LoadScript(Isolate* isolate, const string& path, c
     auto cacheData = TryLoadScriptCache(path);
 
     auto fullRequiredModulePathWithSchema = ArgConverter::ConvertToV8String(isolate, "file://" + path);
-    ScriptOrigin origin(fullRequiredModulePathWithSchema);
+    ScriptOrigin origin(isolate, fullRequiredModulePathWithSchema);
     ScriptCompiler::Source source(scriptText, origin, cacheData);
     ScriptCompiler::CompileOptions option = ScriptCompiler::kNoCompileOptions;
 
     if (cacheData != nullptr) {
-        tns::instrumentation::Frame frame("Compile, cached");
+        tns::instrumentation::Frame frame2("Compile, cached");
         option = ScriptCompiler::kConsumeCodeCache;
         auto maybeScript = ScriptCompiler::Compile(isolate->GetCurrentContext(), &source, option);
         if (maybeScript.IsEmpty() || tc.HasCaught()) {
@@ -390,7 +390,7 @@ Local<Script> ModuleInternal::LoadScript(Isolate* isolate, const string& path, c
         }
         script = maybeScript.ToLocalChecked();
     } else {
-        tns::instrumentation::Frame frame("Compile, no cache");
+        tns::instrumentation::Frame frame2("Compile, no cache");
         auto maybeScript = ScriptCompiler::Compile(isolate->GetCurrentContext(), &source, option);
         if (maybeScript.IsEmpty() || tc.HasCaught()) {
             throw NativeScriptException(tc, "Cannot compile " + path);

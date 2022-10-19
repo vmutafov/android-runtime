@@ -25,7 +25,7 @@
 #include <mutex>
 #include <dlfcn.h>
 #include <console/Console.h>
-#include "NetworkDomainCallbackHandlers.h"
+
 #include "sys/system_properties.h"
 #include "ManualInstrumentation.h"
 #include <snapshot_blob.h>
@@ -33,7 +33,9 @@
 #include <unistd.h>
 
 #ifdef APPLICATION_IN_DEBUG
+#include "NetworkDomainCallbackHandlers.h"
 #include "JsV8InspectorClient.h"
+#include "v8_inspector/src/base/logging.h"
 #include "v8_inspector/src/inspector/v8-inspector-platform.h"
 #endif
 
@@ -277,7 +279,7 @@ jobject Runtime::RunScript(JNIEnv* _env, jobject obj, jstring scriptFile) {
     TryCatch tc(isolate);
 
     Local<Script> script;
-    ScriptOrigin origin(ArgConverter::ConvertToV8String(isolate, filename));
+    ScriptOrigin origin(isolate, ArgConverter::ConvertToV8String(isolate, filename));
     auto maybeScript = Script::Compile(context, source, &origin).ToLocal(&script);
 
     if (tc.HasCaught()) {
@@ -474,11 +476,11 @@ static void InitializeV8() {
         // The default platform doesn't implement executing delayed javascript code from a background
         // thread. To avoid implementing a full blown scheduler, we use the default platform with a
         // timeout=0 flag.
-        V8InspectorPlatform::CreateDefaultPlatform();
+//        V8InspectorPlatform::CreateDefaultPlatform();
+            v8::platform::NewDefaultPlatform().release();
 #else
         v8::platform::NewDefaultPlatform().release();
 #endif
-
     V8::InitializePlatform(Runtime::platform);
     V8::Initialize();
 }
@@ -810,7 +812,7 @@ bool Runtime::RunExtraCode(Isolate* isolate, Local<Context> context, const char*
         return false;
     }
     Local<v8::String> resource_name = v8::String::NewFromUtf8(isolate, name, NewStringType::kNormal).ToLocalChecked();
-    ScriptOrigin origin(resource_name);
+    ScriptOrigin origin(isolate, resource_name);
     ScriptCompiler::Source source(source_string, origin);
     Local<Script> script;
     if (!ScriptCompiler::Compile(context, &source).ToLocal(&script)) {
@@ -829,7 +831,7 @@ bool Runtime::RunExtraCode(Isolate* isolate, Local<Context> context, const char*
                           *v8::String::Utf8Value(isolate, try_catch.Exception()));
         return false;
     }
-    CHECK(!try_catch.HasCaught());
+//    CHECK(!try_catch.HasCaught());
     return true;
 }
 

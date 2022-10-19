@@ -73,7 +73,6 @@ void NativeScriptException::ReThrowToJava() {
 
     auto isolate = Isolate::GetCurrent();
 
-
     if (!m_javaException.IsNull()) {
         auto objectManager = Runtime::GetObjectManager(isolate);
         auto excClassName = objectManager->GetClassName((jobject) m_javaException);
@@ -90,7 +89,6 @@ void NativeScriptException::ReThrowToJava() {
          * the JavaScript callstack as a message.
          * Otherwise create we have to create new exception object.
          */
-        auto isolate = Isolate::GetCurrent();
         auto errObj = Local<Value>::New(isolate, *m_javascriptException);
         if (errObj->IsObject()) {
             auto exObj = TryGetJavaThrowableObject(env, errObj.As<Object>());
@@ -238,7 +236,7 @@ string NativeScriptException::GetFullMessage(const TryCatch& tc, const string& j
     auto ex = tc.Exception();
 
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
-    v8::Local<v8::Context> context = isolate->GetEnteredContext();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
     auto message = tc.Message();
 
@@ -284,10 +282,10 @@ JniLocalRef NativeScriptException::TryGetJavaThrowableObject(JEnv& env, const Lo
     if (!javaObj.IsNull()) {
         objClass = JniLocalRef(env.GetObjectClass(javaObj));
     } else {
-        auto isolate = jsObj->GetIsolate();
-        auto context = isolate->GetCurrentContext();
+        auto objIsolate = jsObj->GetIsolate();
+        auto context = objIsolate->GetCurrentContext();
         Local<Value> nativeEx;
-        jsObj->Get(context, V8StringConstants::GetNativeException(isolate)).ToLocal(&nativeEx);
+        jsObj->Get(context, V8StringConstants::GetNativeException(objIsolate)).ToLocal(&nativeEx);
         if (!nativeEx.IsEmpty() && nativeEx->IsObject()) {
             javaObj = objectManager->GetJavaObjectByJsObject(nativeEx.As<Object>());
             objClass = JniLocalRef(env.GetObjectClass(javaObj));
@@ -319,7 +317,7 @@ string NativeScriptException::GetErrorMessage(const Local<Message>& message, Loc
     auto mes = ArgConverter::ConvertToString(message_text_string);
 
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
-    v8::Local<v8::Context> context = isolate->GetEnteredContext();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
     //get whole error message from previous stack
     stringstream ss;

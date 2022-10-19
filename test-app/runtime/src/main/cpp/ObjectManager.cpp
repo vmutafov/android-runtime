@@ -257,9 +257,9 @@ void ObjectManager::Link(const Local<Object> &object, uint32_t javaObjectID, jcl
 
     // subscribe for JS GC event
     if (m_markingMode == JavaScriptMarkingMode::None) {
-        objectHandle->SetWeak(state, JSObjectFinalizerStatic, WeakCallbackType::kFinalizer);
+        objectHandle->SetWeak(state, JSObjectFinalizerStatic, WeakCallbackType::kParameter);
     } else {
-        objectHandle->SetWeak(state, JSObjectWeakCallbackStatic, WeakCallbackType::kFinalizer);
+        objectHandle->SetWeak(state, JSObjectWeakCallbackStatic, WeakCallbackType::kParameter);
     }
 
     auto jsInfoIdx = static_cast<int>(MetadataNodeKeys::JsInfo);
@@ -344,7 +344,7 @@ void ObjectManager::JSObjectFinalizer(Isolate *isolate, ObjectWeakCallbackState 
                                                            javaObjectID);
     if (isJavaInstanceAlive) {
         // If the Java instance is alive, keep the JavaScript instance alive.
-        po->SetWeak(callbackState, JSObjectFinalizerStatic, WeakCallbackType::kFinalizer);
+        po->SetWeak(callbackState, JSObjectFinalizerStatic, WeakCallbackType::kParameter);
     } else {
         // If the Java instance is dead, this JavaScript instance can be let die.
         delete jsInstanceInfo;
@@ -409,7 +409,7 @@ void ObjectManager::JSObjectWeakCallback(Isolate *isolate, ObjectWeakCallbackSta
         }
     }
 
-    po->SetWeak(callbackState, JSObjectWeakCallbackStatic, WeakCallbackType::kFinalizer);
+    po->SetWeak(callbackState, JSObjectWeakCallbackStatic, WeakCallbackType::kParameter);
 }
 
 int ObjectManager::GenerateNewObjectID() {
@@ -581,7 +581,7 @@ void ObjectManager::MarkReachableObjects(Isolate *isolate, const Local<Object> &
             s.push(proto);
         }
 
-        auto context = o->CreationContext();
+        auto context = o->GetCreationContextChecked();
         auto propNames = NativeScriptExtension::GetPropertyKeys(isolate, o);
         uint64_t len = propNames.size();
 
@@ -647,7 +647,7 @@ void ObjectManager::MarkReachableArrayElements(Local<Object> &o, stack<Local<Val
     auto arr = o.As<Array>();
 
     int arrEnclosedObjectsLength = arr->Length();
-    auto context = o->CreationContext();
+    auto context = o->GetCreationContextChecked();
     for (int i = 0; i < arrEnclosedObjectsLength; i++) {
         Local<Value> enclosedElement;
         arr->Get(context, i).ToLocal(&enclosedElement);

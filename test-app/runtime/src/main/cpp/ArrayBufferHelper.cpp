@@ -89,7 +89,15 @@ void ArrayBufferHelper::CreateFromCallbackImpl(const FunctionCallbackInfo<Value>
         auto data = env.GetDirectBufferAddress(obj);
         auto size = env.GetDirectBufferCapacity(obj);
 
-        arrayBuffer = ArrayBuffer::New(isolate, data, size);
+        std::shared_ptr<v8::BackingStore> store = ArrayBuffer::NewBackingStore(
+                data,
+                size,
+                [](void* data, size_t length, void* deleter_data) {
+                    free(data);
+                    },
+                data);
+        auto ab = ArrayBuffer::New(isolate, size);
+        arrayBuffer = ArrayBuffer::New(isolate, store);
     } else {
         if (m_remainingMethodID == nullptr) {
             m_remainingMethodID = env.GetMethodID(m_ByteBufferClass, "remaining", "()I");
@@ -108,7 +116,7 @@ void ArrayBufferHelper::CreateFromCallbackImpl(const FunctionCallbackInfo<Value>
 
         auto buffer = env.GetByteArrayElements(byteArray, 0);
         arrayBuffer = ArrayBuffer::New(isolate, bufferRemainingSize);
-        memcpy(arrayBuffer->GetContents().Data(), buffer, bufferRemainingSize);
+        memcpy(arrayBuffer->Data(), buffer, bufferRemainingSize);
     }
 
     auto ctx = isolate->GetCurrentContext();

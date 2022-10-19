@@ -104,7 +104,7 @@ Local<String> tns::JsonStringifyObject(Isolate* isolate, Handle<v8::Value> value
 bool tns::V8GetPrivateValue(Isolate* isolate, const Local<Object>& obj, const Local<String>& propName, Local<Value>& out) {
     auto privateKey = Private::ForApi(isolate, propName);
 
-    auto context = obj->CreationContext();
+    auto context = obj->GetCreationContextChecked();
     auto hasPrivate = obj->HasPrivate(context, privateKey);
 
     if (hasPrivate.IsNothing()) {
@@ -130,7 +130,7 @@ bool tns::V8GetPrivateValue(Isolate* isolate, const Local<Object>& obj, const Lo
 
 bool tns::V8SetPrivateValue(Isolate* isolate, const Local<Object>& obj, const Local<String>& propName, const Local<Value>& value) {
     auto privateKey = Private::ForApi(isolate, propName);
-    auto context = obj->CreationContext();
+    auto context = obj->GetCreationContextChecked();
     auto res = obj->SetPrivate(context, privateKey, value);
 
     if (res.IsNothing()) {

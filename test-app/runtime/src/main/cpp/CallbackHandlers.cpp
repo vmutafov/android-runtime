@@ -572,7 +572,7 @@ CallbackHandlers::GetImplementedInterfaces(JEnv &env, const Local<Object> &imple
 
     vector<jstring> interfacesToImplement;
     auto isolate = implementationObject->GetIsolate();
-    auto context = implementationObject->CreationContext();
+    auto context = implementationObject->GetCreationContextChecked();
     auto propNames = implementationObject->GetOwnPropertyNames(context).ToLocalChecked();
     for (int i = 0; i < propNames->Length(); i++) {
         auto name = propNames->Get(context, i).ToLocalChecked().As<String>();
@@ -633,7 +633,7 @@ CallbackHandlers::GetMethodOverrides(JEnv &env, const Local<Object> &implementat
 
     vector<jstring> methodNames;
     auto isolate = implementationObject->GetIsolate();
-    auto context = implementationObject->CreationContext();
+    auto context = implementationObject->GetCreationContextChecked();
     auto propNames = implementationObject->GetOwnPropertyNames(context).ToLocalChecked();
     for (int i = 0; i < propNames->Length(); i++) {
         auto name = propNames->Get(context, i).ToLocalChecked().As<String>();
@@ -1669,7 +1669,7 @@ void CallbackHandlers::PostFrameCallback(const FunctionCallbackInfo<v8::Value> &
                 }
             }
         };
-        entry.callback_->SetWeak(&entry, finalCallback, v8::WeakCallbackType::kFinalizer);
+        entry.callback_->SetWeak(&entry, finalCallback, WeakCallbackType::kParameter);
 
         PostCallback(args, &entry, context);
     }

@@ -1330,7 +1330,7 @@ Local<Object> MetadataNode::GetImplementationObject(Isolate* isolate, const Loca
         return implementationObject;
     }
 
-    auto context = object->CreationContext();
+    auto context = object->GetCreationContextChecked();
     if (object->HasOwnProperty(context, V8StringConstants::GetIsPrototypeImplementationObject(isolate)).ToChecked()) {
         auto v8Prototype = V8StringConstants::GetPrototype(isolate);
         auto maybeHasOwnProperty = object->HasOwnProperty(context, v8Prototype);
@@ -2018,7 +2018,7 @@ Local<Function> MetadataNode::Wrap(Isolate* isolate, const Local<Function>& func
     TryCatch tc(isolate);
 
     Local<Script> script;
-    ScriptOrigin jsOrigin(ArgConverter::ConvertToV8String(isolate, origin));
+    ScriptOrigin jsOrigin(isolate, ArgConverter::ConvertToV8String(isolate, origin));
     auto maybeScript = Script::Compile(context, source, &jsOrigin).ToLocal(&script);
 
     if (tc.HasCaught()) {
