@@ -19,7 +19,7 @@ buildscript {
         rootProject.ext.userDefinedGradleProperties = getUserProperties("${getAppResourcesPath(userDir)}/Android")
 
         loadPropertyFile("$rootDir/additional_gradle.properties")
-        
+
         if (rootProject.hasProperty("userDefinedGradleProperties")) {
             rootProject.ext.userDefinedGradleProperties.each { entry ->
                 def propertyName = entry.getKey()
@@ -152,6 +152,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        mavenLocal()
     }
     beforeEvaluate { project ->
         if (rootProject.hasProperty("userDefinedGradleProperties")) {
