@@ -1,0 +1,3 @@
+rootProject.name = 'nativescript-android-plugins'
+
+include 'nativescript-android-build-plugins'

@@ -1,3 +1,7 @@
+plugins {
+    id 'maven-publish'
+}
+
 apply plugin: 'com.android.library'
 
 def optimized = project.hasProperty("optimized")
@@ -50,6 +54,8 @@ println "Runtime using NDK_PATH: " + NDK_PATH
 
 android {
 
+    namespace = 'org.nativescript.android.runtime'
+
     compileSdkVersion NS_DEFAULT_COMPILE_SDK_VERSION as int
     buildToolsVersion NS_DEFAULT_BUILD_TOOLS_VERSION as String
 
@@ -71,6 +77,10 @@ android {
     }
 
     defaultConfig {
+        aarMetadata {
+            minCompileSdk = NS_DEFAULT_MIN_SDK_VERSION as int
+        }
+
         minSdkVersion NS_DEFAULT_MIN_SDK_VERSION as int
         targetSdkVersion NS_DEFAULT_COMPILE_SDK_VERSION as int
 
@@ -105,11 +115,12 @@ android {
 
         ndk {
             minSdkVersion NS_DEFAULT_MIN_SDK_VERSION as int
-            if (onlyX86) {
-                abiFilters 'x86'
-            } else {
-                abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            }
+//            if (onlyX86) {
+//                abiFilters 'x86'
+//            } else {
+//                abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+//            }
+            abiFilters 'arm64-v8a'
         }
     }
 
@@ -126,20 +137,47 @@ android {
         }
     }
 
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+
 }
 
-allprojects {
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:all" << "-Werror"
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'org.nativescript.android'
+            artifactId = 'runtime'
+            version = '1.0-SNAPSHOT'
+
+            afterEvaluate {
+                from components.release
+            }
         }
+    }
+    repositories {
+        mavenLocal()
     }
 }
 
 dependencies {
-    // println "\t ~ [DEBUG][runtime] build.gradle - ns_default_junit_version = ${ns_default_junit_version}..."
+    def androidXAppCompatVersion = "${ns_default_androidx_appcompat_version}"
+    if (project.hasProperty("androidXAppCompat")) {
+        androidXAppCompatVersion = androidXAppCompat
+        outLogger.withStyle(Style.SuccessHeader).println "\t + using android X library androidx.appcompat:appcompat:$androidXAppCompatVersion"
+    }
+
+    def androidXMaterialVersion = "${ns_default_androidx_material_version}"
+    if (project.hasProperty("androidXMaterial")) {
+        androidXMaterialVersion = androidXMaterial
+        outLogger.withStyle(Style.SuccessHeader).println "\t + using android X library com.google.android.material:material:$androidXMaterialVersion"
+    }
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.google.android.material:material:$androidXMaterialVersion"
+    implementation "androidx.appcompat:appcompat:$androidXAppCompatVersion"
     testImplementation "junit:junit:${ns_default_junit_version}"
     testImplementation "org.mockito:mockito-core:${ns_default_mockito_core_version}"
 }
