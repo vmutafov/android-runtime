@@ -119,11 +119,12 @@ android {
 
         ndk {
             minSdkVersion NS_DEFAULT_MIN_SDK_VERSION as int
-           if (onlyX86) {
-               abiFilters 'x86'
-           } else {
-               abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-           }
+        //    if (onlyX86) {
+        //        abiFilters 'x86'
+        //    } else {
+        //        abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+        //    }
+            abiFilters 'arm64-v8a'
         }
     }
 
@@ -181,6 +182,8 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.google.android.material:material:$androidXMaterialVersion"
     implementation "androidx.appcompat:appcompat:$androidXAppCompatVersion"
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
     testImplementation "junit:junit:${ns_default_junit_version}"
     testImplementation "org.mockito:mockito-core:${ns_default_mockito_core_version}"
 }

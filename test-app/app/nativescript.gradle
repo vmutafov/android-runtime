@@ -109,7 +109,7 @@ tasks.whenTaskAdded({ DefaultTask currentTask ->
     }
 })
 
-task addDependenciesFromNativeScriptPlugins {
+def addDependenciesFromNativeScriptPlugins = {
     nativescriptDependencies.each { dep ->
         def aarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID"), include: ["**/*.aar"])
         aarFiles.each { aarFile ->
@@ -130,7 +130,7 @@ task addDependenciesFromNativeScriptPlugins {
     }
 }
 
-task addDependenciesFromAppResourcesLibraries {
+def addDependenciesFromAppResourcesLibraries = {
     def appResourcesPath = getAppResourcesPath()
     def appResourcesLibraries = file("$appResourcesPath/Android/libs")
     if (appResourcesLibraries.exists()) {
@@ -328,6 +328,9 @@ ext.NativeScript_addDependencies = {
     project.dependencies.add("implementation", "androidx.viewpager2:viewpager2:$androidXViewPagerVersion")
     project.dependencies.add("implementation", "androidx.fragment:fragment:$androidXFragmentVersion")
     project.dependencies.add("implementation", "androidx.transition:transition:$androidXTransitionVersion")
+
+    addDependenciesFromNativeScriptPlugins();
+    addDependenciesFromAppResourcesLibraries();
 }
 
 // Discover all jars and dynamically create tasks for the extraction of each of them
@@ -430,7 +433,7 @@ ext.NativeScript_applyAppGradleConfiguration = { ->
     def appGradle = file(pathToAppGradle)
     if (appGradle.exists()) {
         outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined configuration from ${appGradle}"
-        apply from: pathToAppGradle
+        apply from: appGradle.toString()// pathToAppGradle // TODO: VM: fix this - https://github.com/gradle/gradle/issues/14430
     } else {
         outLogger.withStyle(Style.Info).println "\t + couldn't load user-defined configuration from ${appGradle}. File doesn't exist."
     }
@@ -442,11 +445,23 @@ ext.NativeScript_applyBeforePluginGradleConfiguration = { ->
     def beforePluginGradle = file(pathToBeforePluginGradle)
     if (beforePluginGradle.exists()) {
         outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined configuration from ${beforePluginGradle}"
-        apply from: pathToBeforePluginGradle
+        apply from: pathToBeforePluginGradle  // TODO: VM: fix this - https://github.com/gradle/gradle/issues/14430
     }
 }
 
 ext.NativeScript_setAppIdentifier = { ->
+    def getAppIdentifier = { packageJsonMap ->
+        def appIdentifier = ""
+        if (packageJsonMap && packageJsonMap.nativescript) {
+            appIdentifier = packageJsonMap.nativescript.id
+            if (!(appIdentifier instanceof String)) {
+                appIdentifier = appIdentifier.android
+            }
+        }
+
+        return appIdentifier
+    }
+
     outLogger.withStyle(Style.SuccessHeader).println "\t + setting applicationId"
     File packageJsonFile = new File("$USER_PROJECT_ROOT/$PACKAGE_JSON")
 
@@ -461,18 +476,6 @@ ext.NativeScript_setAppIdentifier = { ->
             android.defaultConfig.applicationId = appIdentifier
         }
     }
-}
-
-def getAppIdentifier = { packageJsonMap ->
-    def appIdentifier = ""
-    if (packageJsonMap && packageJsonMap.nativescript) {
-        appIdentifier = packageJsonMap.nativescript.id
-        if (!(appIdentifier instanceof String)) {
-            appIdentifier = appIdentifier.android
-        }
-    }
-
-    return appIdentifier
 }
 
 def explodeAar(File compileDependency, File outputDir) {

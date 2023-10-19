@@ -26,9 +26,11 @@ buildscript {
 //    NativeScript_applyBuildScriptConfigurations()
 }
 
-plugins {
-    id 'com.nativescript.android.build-plugin' version '1.0-SNAPSHOT'
-}
+apply from: "nativescript.gradle"
+
+// plugins {
+//     id 'org.nativescript.android.plugin' version '1.0-SNAPSHOT'
+// }
 
 apply plugin: "com.android.application"
 apply from: "gradle-helpers/CustomExecutionLogger.gradle"
